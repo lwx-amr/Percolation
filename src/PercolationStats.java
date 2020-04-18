@@ -1,39 +1,26 @@
 /* *****************************************************************************
- *  Name: PercolationStats
- *  Date: 5-9-2019
- *  Description: Perform percolation many times to get P threshold
+ *  Name: Amr Hussien
+ *  Date: 2-4-2020
+ *  Description: Runner for Percolation problem to calc some states
  **************************************************************************** */
 
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
 
 public class PercolationStats {
+    // Variables
     private static final double CONFIDENCE_95 = 1.96;
+    private int numOfTrials, gridSize;
     private double[] thresholds;
-    private final int numOfTrials, gridSide;
 
-    // perform independent trials on an n-by-n grid
-    public PercolationStats(int n, int trials) {
-        if (n <= 0 || trials <= 0) {
-            throw new java.lang.IllegalArgumentException();
-        } else {
-            this.numOfTrials = trials;
-            this.gridSide = n;
-            thresholds = new double[numOfTrials];
-            performTests();
-        }
-    }
-
-    // Perform actual test
-    private void performTests() {
-        Percolation perObj;
-        for (int i = 0; i < numOfTrials; i++) {
-            perObj = new Percolation(gridSide);
-            while (!perObj.percolates()) {
-                openRandomSite(perObj);
-            }
-            thresholds[i] = (double) perObj.numberOfOpenSites() / (gridSide * gridSide);
-        }
+    // perform independent numOfTrials on an n-by-n grid
+    public PercolationStats(int n, int numOfTrials) {
+        if (n <= 0 || numOfTrials <= 0)
+            throw new IllegalArgumentException(
+                    "Expected n and trials > 0 and got n = " + n + " and trials = " + numOfTrials);
+        this.numOfTrials = numOfTrials;
+        this.gridSize = n;
+        this.thresholds = new double[numOfTrials];
     }
 
     // sample mean of percolation threshold
@@ -56,25 +43,34 @@ public class PercolationStats {
         return mean() + ((CONFIDENCE_95 * stddev()) / Math.sqrt(numOfTrials));
     }
 
-    // Open Random site in the network
-    private void openRandomSite(Percolation p) {
-        int row, col;
-        while (true) {
-            row = StdRandom.uniform(1, gridSide + 1);
-            col = StdRandom.uniform(1, gridSide + 1);
-            if (!p.isOpen(row, col))
-                break;
+    // Get random numbers and open this site
+    private void openRandomSite(Percolation percObj) {
+        int row = StdRandom.uniform(1, gridSize + 1);
+        int col = StdRandom.uniform(1, gridSize + 1);
+        percObj.open(row, col);
+    }
+
+    // Main process
+    public void runner() {
+        Percolation percObj;
+        for (int i = 0; i < numOfTrials; i++) {
+            percObj = new Percolation(gridSize);
+            while (!percObj.percolates())
+                openRandomSite(percObj);
+            thresholds[i] = (double) percObj.numberOfOpenSites() / (gridSize * gridSize);
+
         }
-        p.open(row, col);
     }
 
     // test client (see below)
     public static void main(String[] args) {
-        int num = Integer.parseInt(args[0]);
-        int trails = Integer.parseInt(args[1]);
-        PercolationStats p = new PercolationStats(num, trails);
-        System.out.println("Mean:\t\t\t\t = " + p.mean());
-        System.out.println("Stddev:\t\t\t\t = " + p.stddev());
-        System.out.println("95% Confidence interval:\t = " + p.confidenceLo() + ", " + p.confidenceHi());
+        PercolationStats pStates = new PercolationStats(Integer.parseInt(args[0]),
+                                                        Integer.parseInt(args[1]));
+        pStates.runner();
+        System.out.println("Mean:\t\t\t\t = " + pStates.mean());
+        System.out.println("Stddev:\t\t\t\t = " + pStates.stddev());
+        System.out.println("95% Confidence interval:\t = " + pStates.confidenceLo() + ", " + pStates
+                .confidenceHi());
     }
+
 }
